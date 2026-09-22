@@ -1,9 +1,15 @@
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 const express = require('express');
 const db = require('./db/db'); // Initialize DB connection
 
 // Initialize the Express app
 const app = express();
+
+const cors = require('cors');
+app.use(cors());
 
 // Middleware to parse JSON data from requests
 app.use(express.json());
@@ -21,6 +27,19 @@ app.get('/', (req, res) => {
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Hello from the backend!' });
 });
+
+// ─── Protected Route (JWT middleware ka test) ─────────────────────────────────
+const verifyToken = require('./middleware/authMiddleware');
+
+// Yeh route sirf wahi access kar sakta hai jiske paas valid JWT token hai
+app.get('/api/profile', verifyToken, (req, res) => {
+    // req.user middleware ne set kiya tha (decoded JWT data)
+    res.json({
+        message: 'You accessed a PROTECTED route!',
+        loggedInUser: req.user
+    });
+});
+
 
 // Database check route (for browser)
 app.get('/api/db-check', (req, res) => {
