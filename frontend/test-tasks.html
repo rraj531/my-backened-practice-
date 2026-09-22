@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tasks CRUD</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        h3 { color: #555; margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        input, textarea, button { padding: 10px; margin: 5px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
+        input, textarea { width: 300px; }
+        button { cursor: pointer; color: white; border: none; }
+        .btn-green { background: #27ae60; }
+        .btn-blue { background: #2980b9; }
+        .btn-orange { background: #e67e22; }
+        .btn-red { background: #c0392b; }
+        button:hover { opacity: 0.85; }
+        #result { background: #1e1e1e; color: #0f0; padding: 15px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; font-family: monospace; min-height: 100px; }
+        .section { background: white; padding: 20px; border-radius: 10px; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .note { background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>📝 Tasks CRUD Test Page</h1>
+
+    <div class="note">
+        ⚠️ <strong>Pehle login karo!</strong> Token paste karo jo login se mila tha:
+    </div>
+
+    <!-- TOKEN INPUT -->
+    <div class="section">
+        <h3>🔑 JWT Token</h3>
+        <input type="text" id="token" placeholder="Apna JWT token yahan paste karo" style="width: 95%;">
+    </div>
+
+    <!-- CREATE TASK -->
+    <div class="section">
+        <h3>➕ Create Task</h3>
+        <input type="text" id="taskTitle" placeholder="Task title"><br>
+        <textarea id="taskDesc" placeholder="Task description (optional)" rows="2"></textarea><br>
+        <button class="btn-green" onclick="createTask()">Create Task</button>
+    </div>
+
+    <!-- GET ALL TASKS -->
+    <div class="section">
+        <h3>📋 Get All My Tasks</h3>
+        <button class="btn-blue" onclick="getAllTasks()">Get All Tasks</button>
+    </div>
+
+    <!-- GET SINGLE TASK -->
+    <div class="section">
+        <h3>🔍 Get Task by ID</h3>
+        <input type="number" id="getTaskId" placeholder="Task ID">
+        <button class="btn-blue" onclick="getTaskById()">Get Task</button>
+    </div>
+
+    <!-- UPDATE TASK -->
+    <div class="section">
+        <h3>✏️ Update Task</h3>
+        <input type="number" id="updateTaskId" placeholder="Task ID"><br>
+        <input type="text" id="updateTitle" placeholder="New title (optional)"><br>
+        <textarea id="updateDesc" placeholder="New description (optional)" rows="2"></textarea><br>
+        <label>
+            <input type="checkbox" id="updateCompleted"> Mark as Completed ✅
+        </label><br>
+        <button class="btn-orange" onclick="updateTask()">Update Task</button>
+    </div>
+
+    <!-- DELETE TASK -->
+    <div class="section">
+        <h3>🗑️ Delete Task</h3>
+        <input type="number" id="deleteTaskId" placeholder="Task ID">
+        <button class="btn-red" onclick="deleteTask()">Delete Task</button>
+    </div>
+
+    <!-- RESULT OUTPUT -->
+    <h3>📡 Server Response:</h3>
+    <div id="result">Response will appear here...</div>
+
+    <script>
+        const API = 'http://localhost:3000/api/tasks';
+
+        // Auto-load token from localStorage if available
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('token');
+            if (savedToken) {
+                document.getElementById('token').value = savedToken;
+            }
+        });
+
+        function getToken() {
+            return document.getElementById('token').value.trim();
+        }
+
+        function showResult(data) {
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // ─── CREATE TASK ─────────────────────────────────────
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDesc').value;
+
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify({ title, description })
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (err) {
+                showResult({ error: err.message });
+            }
+        }
+
+        // ─── GET ALL TASKS ───────────────────────────────────
+        async function getAllTasks() {
+            try {
+                const res = await fetch(API, {
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (err) {
+                showResult({ error: err.message });
+            }
+        }
+
+        // ─── GET TASK BY ID ─────────────────────────────────
+        async function getTaskById() {
+            const id = document.getElementById('getTaskId').value;
+
+            try {
+                const res = await fetch(`${API}/${id}`, {
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (err) {
+                showResult({ error: err.message });
+            }
+        }
+
+        // ─── UPDATE TASK ────────────────────────────────────
+        async function updateTask() {
+            const id = document.getElementById('updateTaskId').value;
+            const title = document.getElementById('updateTitle').value;
+            const description = document.getElementById('updateDesc').value;
+            const completed = document.getElementById('updateCompleted').checked;
+
+            const body = {};
+            if (title) body.title = title;
+            if (description) body.description = description;
+            body.completed = completed;
+
+            try {
+                const res = await fetch(`${API}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (err) {
+                showResult({ error: err.message });
+            }
+        }
+
+        // ─── DELETE TASK ────────────────────────────────────
+        async function deleteTask() {
+            const id = document.getElementById('deleteTaskId').value;
+
+            try {
+                const res = await fetch(`${API}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (err) {
+                showResult({ error: err.message });
+            }
+        }
+    </script>
+</body>
+</html>

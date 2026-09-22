@@ -18,6 +18,9 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+const taskRoutes = require('./routes/taskRoutes');
+app.use('/api/tasks', taskRoutes);
+
 // A basic route (GET request)
 app.get('/', (req, res) => {
     res.send('Welcome to the Task Manager API!');
