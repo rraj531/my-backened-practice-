@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test JWT Middleware - Phase 5</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 600px; }
+        button { padding: 10px 20px; margin: 5px; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        .btn-green { background: #28a745; }
+        .btn-red { background: #dc3545; }
+        #result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h2>🔒 Test JWT Middleware (Phase 5)</h2>
+    <p>Pehle <a href="test-login.html">test-login.html</a> mein login karo. Token automatically save ho jayega.</p>
+    <hr>
+
+    <h3>Test 1: Token ke SAATH request (✅ Should work)</h3>
+    <button class="btn-green" onclick="testWithToken()">Access /api/profile WITH Token</button>
+
+    <h3>Test 2: Token ke BINA request (❌ Should be blocked)</h3>
+    <button class="btn-red" onclick="testWithoutToken()">Access /api/profile WITHOUT Token</button>
+
+    <h3>Test 3: Galat (Fake) Token (❌ Should be blocked)</h3>
+    <button class="btn-red" onclick="testFakeToken()">Access /api/profile with FAKE Token</button>
+
+    <div id="result">Result yahan dikhega...</div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+
+        // Test 1: Token ke sath (sahi tarika)
+        async function testWithToken() {
+            // localStorage se token nikalo (jo login ke time save hua tha)
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultDiv.innerHTML = '⚠️ Token nahi mila! Pehle <a href="test-login.html">login karo</a>.';
+                return;
+            }
+
+            const response = await fetch('http://localhost:3000/api/profile', {
+                method: 'GET',
+                headers: {
+                    // Yeh hai woh format jisme backend token expect karta hai
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            const data = await response.json();
+            resultDiv.innerHTML = '<b style="color:green">✅ SUCCESS (Token ke SAATH):</b><br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        // Test 2: Koi token nahi bheja
+        async function testWithoutToken() {
+            const response = await fetch('http://localhost:3000/api/profile', {
+                method: 'GET'
+                // Authorization header nahi hai!
+            });
+            const data = await response.json();
+            resultDiv.innerHTML = '<b style="color:red">❌ BLOCKED (Token ke BINA):</b><br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        // Test 3: Fake token
+        async function testFakeToken() {
+            const response = await fetch('http://localhost:3000/api/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer this.is.a.fake.token.123'
+                }
+            });
+            const data = await response.json();
+            resultDiv.innerHTML = '<b style="color:red">❌ BLOCKED (Fake Token):</b><br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+    </script>
+</body>
+</html>
