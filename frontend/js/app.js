@@ -4,6 +4,7 @@ const state = {
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     tasks: [],
     filter: 'all',
+    sort: 'newest',
     search: '',
     editingTaskId: null
 };
@@ -174,7 +175,7 @@ function logout() {
 // ─── TASK CRUD LOGIC ──────────────────────────────────────────────────────
 async function loadTasks() {
     try {
-        const data = await apiFetch('/api/tasks');
+        const data = await apiFetch(`/api/tasks?sort=${state.sort}`);
         state.tasks = data.tasks || [];
         renderTasks();
         renderStats();
@@ -187,9 +188,13 @@ async function handleCreateTask(e) {
     e.preventDefault();
     const titleInput = document.getElementById('task-title-input');
     const descInput = document.getElementById('task-desc-input');
+    const priorityInput = document.getElementById('task-priority-input');
+    const dueDateInput = document.getElementById('task-due-date-input');
 
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
+    const priority = priorityInput ? priorityInput.value : 'medium';
+    const due_date = dueDateInput ? dueDateInput.value : null;
 
     if (!title) {
         showToast('Please enter a task title', 'error');
@@ -197,23 +202,18 @@ async function handleCreateTask(e) {
     }
 
     try {
-        const data = await apiFetch('/api/tasks', {
+        await apiFetch('/api/tasks', {
             method: 'POST',
-            body: { title, description }
+            body: { title, description, priority, due_date: due_date || null }
         });
 
         titleInput.value = '';
         descInput.value = '';
+        if (dueDateInput) dueDateInput.value = '';
+        if (priorityInput) priorityInput.value = 'medium';
 
         showToast('Task added successfully!');
-        // Prepend task to array or reload
-        if (data.task) {
-            state.tasks.unshift(data.task);
-            renderTasks();
-            renderStats();
-        } else {
-            loadTasks();
-        }
+        loadTasks();
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -264,6 +264,22 @@ function openEditModal(taskId) {
     state.editingTaskId = taskId;
     document.getElementById('edit-title-input').value = task.title;
     document.getElementById('edit-desc-input').value = task.description || '';
+    
+    const editPriority = document.getElementById('edit-priority-input');
+    if (editPriority) {
+        editPriority.value = task.priority || 'medium';
+    }
+
+    const editDueDate = document.getElementById('edit-due-date-input');
+    if (editDueDate) {
+        if (task.due_date) {
+            // Convert to YYYY-MM-DD
+            editDueDate.value = task.due_date.split('T')[0];
+        } else {
+            editDueDate.value = '';
+        }
+    }
+
     document.getElementById('edit-modal').classList.add('active');
 }
 
@@ -278,6 +294,8 @@ async function handleUpdateTask(e) {
 
     const title = document.getElementById('edit-title-input').value.trim();
     const description = document.getElementById('edit-desc-input').value.trim();
+    const priority = document.getElementById('edit-priority-input').value;
+    const dueDate = document.getElementById('edit-due-date-input').value;
 
     if (!title) {
         showToast('Title cannot be empty', 'error');
@@ -287,18 +305,17 @@ async function handleUpdateTask(e) {
     try {
         await apiFetch(`/api/tasks/${state.editingTaskId}`, {
             method: 'PUT',
-            body: { title, description }
+            body: { 
+                title, 
+                description, 
+                priority, 
+                due_date: dueDate || null 
+            }
         });
-
-        const task = state.tasks.find(t => t.id === state.editingTaskId);
-        if (task) {
-            task.title = title;
-            task.description = description;
-            renderTasks();
-        }
 
         closeEditModal();
         showToast('Task updated successfully!');
+        loadTasks();
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -319,7 +336,7 @@ function renderTasks() {
     const list = document.getElementById('tasks-container');
     list.innerHTML = '';
 
-    // Filter tasks
+    // Filter tasks by status
     let filtered = state.tasks.filter(task => {
         const isCompleted = Boolean(task.completed);
         if (state.filter === 'pending') return !isCompleted;
@@ -347,14 +364,43 @@ function renderTasks() {
         return;
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+
     filtered.forEach(task => {
         const isCompleted = Boolean(task.completed);
         const item = document.createElement('div');
         item.className = `task-item ${isCompleted ? 'completed' : ''}`;
 
-        const createdDate = task.created_at ? new Date(task.created_at).toLocaleDateString(undefined, {
-            month: 'short', day: 'numeric'
-        }) : '';
+        // Priority Badge
+        const priority = task.priority || 'medium';
+        let priorityBadge = '';
+        if (priority === 'high') {
+            priorityBadge = `<span class="badge badge-priority-high">🔴 High</span>`;
+        } else if (priority === 'low') {
+            priorityBadge = `<span class="badge badge-priority-low">🟢 Low</span>`;
+        } else {
+            priorityBadge = `<span class="badge badge-priority-medium">🟡 Med</span>`;
+        }
+
+        // Due Date Badge
+        let dueDateBadge = '';
+        if (task.due_date) {
+            const dateStr = task.due_date.split('T')[0];
+            const dateObj = new Date(task.due_date);
+            const formatted = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+            if (!isCompleted) {
+                if (dateStr < todayStr) {
+                    dueDateBadge = `<span class="badge badge-overdue">⚠️ Overdue (${formatted})</span>`;
+                } else if (dateStr === todayStr) {
+                    dueDateBadge = `<span class="badge badge-due-today">⏰ Due Today</span>`;
+                } else {
+                    dueDateBadge = `<span class="badge badge-due-upcoming">📅 Due ${formatted}</span>`;
+                }
+            } else {
+                dueDateBadge = `<span class="badge badge-due-upcoming">📅 ${formatted}</span>`;
+            }
+        }
 
         item.innerHTML = `
             <div class="task-checkbox-wrapper">
@@ -368,7 +414,8 @@ function renderTasks() {
                     <span class="badge ${isCompleted ? 'badge-completed' : 'badge-pending'}">
                         ${isCompleted ? 'Completed' : 'Pending'}
                     </span>
-                    ${createdDate ? `<span>📅 ${createdDate}</span>` : ''}
+                    ${priorityBadge}
+                    ${dueDateBadge}
                 </div>
             </div>
             <div class="task-actions">
@@ -434,6 +481,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTasks();
         });
     });
+
+    // Sort select
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            state.sort = e.target.value;
+            loadTasks();
+        });
+    }
 
     // Search input
     document.getElementById('search-input').addEventListener('input', (e) => {

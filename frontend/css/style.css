@@ -462,6 +462,68 @@ textarea.form-control {
     color: #065f46;
 }
 
+/* Priority Badges */
+.badge-priority-high {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.badge-priority-medium {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fcd34d;
+}
+
+.badge-priority-low {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+
+/* Due Date Badges */
+.badge-overdue {
+    background: #ffe4e6;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    font-weight: 700;
+}
+
+.badge-due-today {
+    background: #fef9c3;
+    color: #a16207;
+    border: 1px solid #fef08a;
+    font-weight: 700;
+}
+
+.badge-due-upcoming {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.sort-select {
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    background: white;
+    color: var(--gray-700);
+    outline: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    border-color: var(--primary);
+}
+
 /* Completed state strike-through */
 .task-item.completed {
     background: #fcfcfd;

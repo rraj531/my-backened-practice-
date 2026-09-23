@@ -107,6 +107,20 @@
                     <div class="form-group">
                         <textarea id="task-desc-input" class="form-control" placeholder="Add extra details or notes (optional)" rows="2"></textarea>
                     </div>
+                    <div class="form-row" style="margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block;">Priority</label>
+                            <select id="task-priority-input" class="form-control">
+                                <option value="medium">🟡 Medium Priority</option>
+                                <option value="high">🔴 High Priority</option>
+                                <option value="low">🟢 Low Priority</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block;">Due Date</label>
+                            <input type="date" id="task-due-date-input" class="form-control">
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Add Task</button>
                 </form>
             </div>
@@ -117,6 +131,15 @@
                     <div class="filter-pill active" data-filter="all">All</div>
                     <div class="filter-pill" data-filter="pending">Pending</div>
                     <div class="filter-pill" data-filter="completed">Completed</div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="sort-select" style="font-size: 13px; font-weight: 600; color: var(--gray-700);">Sort:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="newest">🕒 Newest First</option>
+                        <option value="priority">⚡ Priority (High → Low)</option>
+                        <option value="due_date">📅 Due Date (Earliest)</option>
+                    </select>
                 </div>
 
                 <div class="search-box">
@@ -149,6 +172,20 @@
                 <div class="form-group">
                     <label for="edit-desc-input">Description</label>
                     <textarea id="edit-desc-input" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-row" style="margin-bottom: 16px;">
+                    <div>
+                        <label for="edit-priority-input" style="font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block;">Priority</label>
+                        <select id="edit-priority-input" class="form-control">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-due-date-input" style="font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block;">Due Date</label>
+                        <input type="date" id="edit-due-date-input" class="form-control">
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
                     <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>

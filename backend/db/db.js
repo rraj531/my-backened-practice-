@@ -52,6 +52,8 @@ db.connect((err) => {
                     title VARCHAR(255) NOT NULL,
                     description TEXT,
                     completed BOOLEAN DEFAULT false,
+                    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+                    due_date DATE NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
@@ -59,6 +61,20 @@ db.connect((err) => {
             db.query(createTasksTable, (err) => {
                 if (err) throw err;
                 console.log('Table "tasks" is ready.');
+
+                // Safe migration: Add priority column if it doesn't exist
+                db.query(`ALTER TABLE tasks ADD COLUMN priority ENUM('low', 'medium', 'high') DEFAULT 'medium'`, (err) => {
+                    if (err && err.errno !== 1060 && err.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Priority migration notice:', err.message);
+                    }
+                });
+
+                // Safe migration: Add due_date column if it doesn't exist
+                db.query(`ALTER TABLE tasks ADD COLUMN due_date DATE NULL`, (err) => {
+                    if (err && err.errno !== 1060 && err.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Due date migration notice:', err.message);
+                    }
+                });
             });
         });
     });
