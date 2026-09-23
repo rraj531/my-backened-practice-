@@ -46,8 +46,12 @@ async function apiFetch(endpoint, options = {}) {
 
         if (response.status === 401 || response.status === 403) {
             // Token expired or invalid
-            logout();
-            throw new Error('Session expired. Please log in again.');
+            const hadSession = Boolean(state.token);
+            logout(false); // Silent cleanup without redundant logout toast
+            if (hadSession) {
+                showToast('Session expired. Please log in again.', 'error');
+            }
+            throw new Error('AUTH_EXPIRED');
         }
 
         if (!response.ok) {
@@ -162,14 +166,16 @@ async function handleRegister(e) {
     }
 }
 
-function logout() {
+function logout(notify = true) {
     state.token = null;
     state.user = null;
     state.tasks = [];
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     updateUI();
-    showToast('Logged out successfully');
+    if (notify) {
+        showToast('Logged out successfully');
+    }
 }
 
 // ─── TASK CRUD LOGIC ──────────────────────────────────────────────────────
@@ -180,7 +186,9 @@ async function loadTasks() {
         renderTasks();
         renderStats();
     } catch (err) {
-        showToast('Failed to load tasks: ' + err.message, 'error');
+        if (err.message !== 'AUTH_EXPIRED') {
+            showToast('Failed to load tasks: ' + err.message, 'error');
+        }
     }
 }
 
@@ -446,15 +454,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check existing login session
     if (state.token) {
         try {
-            const profile = await apiFetch('/api/profile');
-            state.user = profile.loggedInUser;
-            localStorage.setItem('user', JSON.stringify(state.user));
+            // Direct fetch (not apiFetch) to avoid auto-logout loop on invalid token
+            const res = await fetch('/api/profile', {
+                headers: { 'Authorization': `Bearer ${state.token}` }
+            });
+
+            if (res.ok) {
+                const profile = await res.json();
+                state.user = profile.loggedInUser;
+                localStorage.setItem('user', JSON.stringify(state.user));
+            } else {
+                // Token invalid/expired — silently clear session
+                state.token = null;
+                state.user = null;
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
         } catch (e) {
-            // Invalid token
-            state.token = null;
-            state.user = null;
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            // Network error — use cached user data if available
+            // Don't clear session on network failure
         }
     }
 
