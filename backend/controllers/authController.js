@@ -80,10 +80,15 @@ exports.login = async (req, res) => {
         // jwt.sign(payload, secret, options)
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        // 5. Token frontend ko bhej do
+        // 5. Token and user info frontend ko bhej do
         res.status(200).json({
             message: 'Login successful!',
-            token: token
+            token: token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            }
         });
     });
 };

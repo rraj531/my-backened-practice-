@@ -14,17 +14,15 @@ app.use(cors());
 // Middleware to parse JSON data from requests
 app.use(express.json());
 
+// Serve static frontend files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, '../frontend')));
+
 // Import and use routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
 const taskRoutes = require('./routes/taskRoutes');
 app.use('/api/tasks', taskRoutes);
-
-// A basic route (GET request)
-app.get('/', (req, res) => {
-    res.send('Welcome to the Task Manager API!');
-});
 
 // Another route for testing
 app.get('/api/test', (req, res) => {
