@@ -41,8 +41,8 @@
             <!-- Login Form -->
             <form id="form-login">
                 <div class="form-group">
-                    <label for="login-email">Email Address</label>
-                    <input type="email" id="login-email" class="form-control" placeholder="name@example.com" required>
+                    <label for="login-email">Email Address or Mobile Number</label>
+                    <input type="text" id="login-email" class="form-control" placeholder="Email or 10-digit mobile" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
@@ -51,21 +51,51 @@
                 <button type="submit" class="btn btn-primary btn-block" id="btn-login">Login</button>
             </form>
 
-            <!-- Register Form -->
+            <!-- Register Form with Dual OTP (Email + Mobile) -->
             <form id="form-register" style="display: none;">
-                <div class="form-group">
-                    <label for="register-name">Full Name</label>
-                    <input type="text" id="register-name" class="form-control" placeholder="Raj Pandey" required>
+                <div id="register-step-1">
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" class="form-control" placeholder="Raj Pandey" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email Address (for Gmail OTP)</label>
+                        <input type="email" id="register-email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-phone">Mobile Number (for SMS OTP)</label>
+                        <input type="tel" id="register-phone" class="form-control" placeholder="9876543210" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" class="form-control" placeholder="At least 6 characters" required>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" id="btn-send-otp">Send Verification OTPs 📲</button>
                 </div>
-                <div class="form-group">
-                    <label for="register-email">Email Address</label>
-                    <input type="email" id="register-email" class="form-control" placeholder="name@example.com" required>
+
+                <!-- Register Form Step 2: Dual OTP Verification -->
+                <div id="register-step-2" style="display: none;">
+                    <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: var(--primary); line-height: 1.6;">
+                        📩 <strong>Email OTP:</strong> Sent to <strong id="otp-sent-email"></strong><br>
+                        📱 <strong>Mobile OTP:</strong> Sent to +91 <strong id="otp-sent-phone"></strong>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-email-otp">1. Enter 6-Digit Email OTP</label>
+                        <input type="text" id="register-email-otp" class="form-control" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-size: 18px; font-weight: bold; text-align: center;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-mobile-otp">2. Enter 6-Digit Mobile SMS OTP</label>
+                        <input type="text" id="register-mobile-otp" class="form-control" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-size: 18px; font-weight: bold; text-align: center;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-verify-otp">Verify Both OTPs & Register ✅</button>
+                    <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 13px;">
+                        <a href="javascript:void(0)" id="link-resend-otp" style="color: var(--primary); text-decoration: none;">Resend OTPs</a>
+                        <a href="javascript:void(0)" id="link-back-step1" style="color: var(--gray-500); text-decoration: none;">Change details</a>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" class="form-control" placeholder="At least 6 characters" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block" id="btn-register">Create Account</button>
             </form>
         </div>
 

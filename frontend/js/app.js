@@ -93,6 +93,8 @@ function switchAuthTab(tab) {
     const loginForm = document.getElementById('form-login');
     const registerForm = document.getElementById('form-register');
 
+    resetRegisterSteps();
+
     if (tab === 'login') {
         loginTab.classList.add('active');
         registerTab.classList.remove('active');
@@ -137,32 +139,113 @@ async function handleLogin(e) {
     }
 }
 
-async function handleRegister(e) {
+function resetRegisterSteps() {
+    const s1 = document.getElementById('register-step-1');
+    const s2 = document.getElementById('register-step-2');
+    const emailOtpInput = document.getElementById('register-email-otp');
+    const mobileOtpInput = document.getElementById('register-mobile-otp');
+    if (s1) s1.style.display = 'block';
+    if (s2) s2.style.display = 'none';
+    if (emailOtpInput) emailOtpInput.value = '';
+    if (mobileOtpInput) mobileOtpInput.value = '';
+}
+
+async function handleSendOtp() {
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const phone = document.getElementById('register-phone').value.trim();
+    const password = document.getElementById('register-password').value;
+
+    if (!name || !email || !phone || !password) {
+        showToast('Please fill in Name, Email, Mobile Number, and Password', 'error');
+        return;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+        showToast('Please enter a valid 10-digit mobile number', 'error');
+        return;
+    }
+
+    if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-send-otp');
+    btn.disabled = true;
+    btn.textContent = 'Sending OTPs...';
+
+    try {
+        const cleanEmail = email.toLowerCase();
+        const data = await apiFetch('/api/auth/send-dual-otp', {
+            method: 'POST',
+            body: { email: cleanEmail, phone: cleanPhone }
+        });
+
+        document.getElementById('otp-sent-email').textContent = cleanEmail;
+        document.getElementById('otp-sent-phone').textContent = cleanPhone;
+        document.getElementById('register-step-1').style.display = 'none';
+        document.getElementById('register-step-2').style.display = 'block';
+        document.getElementById('register-email-otp').focus();
+
+        showToast(data.message || 'OTPs sent to your Gmail and Mobile!');
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Verification OTPs 📲';
+    }
+}
+
+async function handleVerifyAndRegister(e) {
     e.preventDefault();
     const name = document.getElementById('register-name').value.trim();
     const email = document.getElementById('register-email').value.trim();
+    const phone = document.getElementById('register-phone').value.trim();
     const password = document.getElementById('register-password').value;
+    const emailOtp = document.getElementById('register-email-otp').value.trim();
+    const mobileOtp = document.getElementById('register-mobile-otp').value.trim();
 
-    const btn = document.getElementById('btn-register');
+    if (!emailOtp || emailOtp.length < 6) {
+        showToast('Please enter the 6-digit Email OTP from Gmail', 'error');
+        return;
+    }
+
+    if (!mobileOtp || mobileOtp.length < 6) {
+        showToast('Please enter the 6-digit Mobile SMS OTP', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-verify-otp');
     btn.disabled = true;
-    btn.textContent = 'Registering...';
+    btn.textContent = 'Verifying...';
 
     try {
-        await apiFetch('/api/auth/register', {
+        const cleanEmail = email.toLowerCase();
+        const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+        await apiFetch('/api/auth/verify-dual-otp-register', {
             method: 'POST',
-            body: { name, email, password }
+            body: { 
+                name, 
+                email: cleanEmail, 
+                phone: cleanPhone, 
+                password, 
+                emailOtp: emailOtp.trim(), 
+                mobileOtp: mobileOtp.trim() 
+            }
         });
 
-        showToast('Registration successful! Please login.');
-        // Switch to login tab and prefill email
+        showToast('Account created successfully! Please login.');
+        resetRegisterSteps();
         switchAuthTab('login');
-        document.getElementById('login-email').value = email;
+        document.getElementById('login-email').value = cleanEmail;
         document.getElementById('login-password').focus();
     } catch (err) {
         showToast(err.message, 'error');
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Create Account';
+        btn.textContent = 'Verify Both OTPs & Register ✅';
     }
 }
 
@@ -483,7 +566,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tab-register').addEventListener('click', () => switchAuthTab('register'));
 
     document.getElementById('form-login').addEventListener('submit', handleLogin);
-    document.getElementById('form-register').addEventListener('submit', handleRegister);
+    document.getElementById('btn-send-otp').addEventListener('click', handleSendOtp);
+    document.getElementById('link-resend-otp').addEventListener('click', handleSendOtp);
+    document.getElementById('link-back-step1').addEventListener('click', resetRegisterSteps);
+    document.getElementById('form-register').addEventListener('submit', handleVerifyAndRegister);
     document.getElementById('btn-logout').addEventListener('click', logout);
 
     document.getElementById('form-create-task').addEventListener('submit', handleCreateTask);

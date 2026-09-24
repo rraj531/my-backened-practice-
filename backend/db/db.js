@@ -35,6 +35,7 @@ db.connect((err) => {
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(100) NOT NULL,
                     email VARCHAR(100) NOT NULL UNIQUE,
+                    phone VARCHAR(20) NULL,
                     password VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -74,6 +75,45 @@ db.connect((err) => {
                     if (err && err.errno !== 1060 && err.code !== 'ER_DUP_FIELDNAME') {
                         console.error('Due date migration notice:', err.message);
                     }
+                });
+
+                // 5. Create 'email_otps' table
+                const createEmailOtpsTable = `
+                    CREATE TABLE IF NOT EXISTS email_otps (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        email VARCHAR(100) NOT NULL,
+                        otp VARCHAR(6) NOT NULL,
+                        expires_at DATETIME NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `;
+                db.query(createEmailOtpsTable, (err) => {
+                    if (err) throw err;
+                    console.log('Table "email_otps" is ready.');
+                });
+
+                // Safe migration: Add phone column to users table if it doesn't exist
+                db.query(`ALTER TABLE users ADD COLUMN phone VARCHAR(20) NULL`, (err) => {
+                    if (err && err.errno !== 1060 && err.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Phone column migration notice:', err.message);
+                    }
+                });
+
+                // 6. Create 'registration_otps' table (Dual Email + Mobile OTP)
+                const createRegistrationOtpsTable = `
+                    CREATE TABLE IF NOT EXISTS registration_otps (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        email VARCHAR(100) NOT NULL,
+                        phone VARCHAR(20) NOT NULL,
+                        email_otp VARCHAR(6) NOT NULL,
+                        mobile_otp VARCHAR(6) NOT NULL,
+                        expires_at DATETIME NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `;
+                db.query(createRegistrationOtpsTable, (err) => {
+                    if (err) throw err;
+                    console.log('Table "registration_otps" is ready.');
                 });
             });
         });
