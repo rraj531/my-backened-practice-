@@ -75,9 +75,19 @@
 
                 <!-- Register Form Step 2: Dual OTP Verification -->
                 <div id="register-step-2" style="display: none;">
-                    <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: var(--primary); line-height: 1.6;">
+                    <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: var(--primary); line-height: 1.6;">
                         📩 <strong>Email OTP:</strong> Sent to <strong id="otp-sent-email"></strong><br>
                         📱 <strong>Mobile OTP:</strong> Sent to +91 <strong id="otp-sent-phone"></strong>
+                    </div>
+
+                    <div id="otp-dev-notice" style="display: none; background: #fff8e1; border: 1px solid #ffe082; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 12px; color: #795548; line-height: 1.5;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>📱 <strong>Test Mobile OTP:</strong> <span id="dev-mobile-otp-value" style="font-weight: 800; font-size: 15px; color: #d32f2f; letter-spacing: 2px;"></span></span>
+                            <button type="button" id="btn-autofill-mobile-otp" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px;">Auto-fill</button>
+                        </div>
+                        <div style="margin-top: 4px; font-size: 11px; color: #8d6e63;">
+                            ℹ️ Carrier SMS delivery requires Fast2SMS or Twilio/Supabase SMS gateway keys.
+                        </div>
                     </div>
 
                     <div class="form-group">

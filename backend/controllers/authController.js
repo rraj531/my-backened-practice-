@@ -55,10 +55,13 @@ exports.sendDualOtp = async (req, res) => {
                 await sendOtpEmail(cleanEmail, emailOtp);
 
                 // 5. Send Mobile SMS via Supabase / SMS Service
-                await sendMobileOtp(cleanPhone, mobileOtp);
+                const smsResult = await sendMobileOtp(cleanPhone, mobileOtp);
 
                 res.status(200).json({
-                    message: `OTPs sent! Check your Gmail (${cleanEmail}) and Mobile (+91 ${cleanPhone})`,
+                    message: smsResult.provider === 'supabase' || smsResult.provider === 'fast2sms'
+                        ? `OTPs sent to your Gmail and Mobile SMS!`
+                        : `OTP sent to Gmail! Mobile OTP logged below for testing.`,
+                    smsDelivery: smsResult.provider,
                     devMobileOtp: mobileOtp
                 });
             });

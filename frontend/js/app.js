@@ -144,10 +144,12 @@ function resetRegisterSteps() {
     const s2 = document.getElementById('register-step-2');
     const emailOtpInput = document.getElementById('register-email-otp');
     const mobileOtpInput = document.getElementById('register-mobile-otp');
+    const devNotice = document.getElementById('otp-dev-notice');
     if (s1) s1.style.display = 'block';
     if (s2) s2.style.display = 'none';
     if (emailOtpInput) emailOtpInput.value = '';
     if (mobileOtpInput) mobileOtpInput.value = '';
+    if (devNotice) devNotice.style.display = 'none';
 }
 
 async function handleSendOtp() {
@@ -187,6 +189,16 @@ async function handleSendOtp() {
         document.getElementById('otp-sent-phone').textContent = cleanPhone;
         document.getElementById('register-step-1').style.display = 'none';
         document.getElementById('register-step-2').style.display = 'block';
+
+        const devNotice = document.getElementById('otp-dev-notice');
+        const devVal = document.getElementById('dev-mobile-otp-value');
+        if (data.devMobileOtp && devNotice && devVal) {
+            devVal.textContent = data.devMobileOtp;
+            devNotice.style.display = 'block';
+        } else if (devNotice) {
+            devNotice.style.display = 'none';
+        }
+
         document.getElementById('register-email-otp').focus();
 
         showToast(data.message || 'OTPs sent to your Gmail and Mobile!');
@@ -570,6 +582,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('link-resend-otp').addEventListener('click', handleSendOtp);
     document.getElementById('link-back-step1').addEventListener('click', resetRegisterSteps);
     document.getElementById('form-register').addEventListener('submit', handleVerifyAndRegister);
+    const autoFillBtn = document.getElementById('btn-autofill-mobile-otp');
+    if (autoFillBtn) {
+        autoFillBtn.addEventListener('click', () => {
+            const devVal = document.getElementById('dev-mobile-otp-value').textContent;
+            if (devVal) {
+                document.getElementById('register-mobile-otp').value = devVal.trim();
+                showToast('Test Mobile OTP auto-filled!');
+            }
+        });
+    }
     document.getElementById('btn-logout').addEventListener('click', logout);
 
     document.getElementById('form-create-task').addEventListener('submit', handleCreateTask);
